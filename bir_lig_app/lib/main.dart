@@ -20,12 +20,13 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "BirLig",
-      theme: darkTheme,
+      theme: MyAppTheme.darkTheme,
       routes: {
         '/login':(context) => LoginPage(),
         '/home':(context) => const Home()

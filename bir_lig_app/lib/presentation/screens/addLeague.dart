@@ -1,3 +1,4 @@
+import 'package:bir_lig_app/constants/theme_constants.dart';
 import 'package:bir_lig_app/data/models/response.dart';
 import 'package:bir_lig_app/data/repositories/league_repository.dart';
 import 'package:bir_lig_app/data/services/api_service.dart';
@@ -24,13 +25,13 @@ class _AddLeagueState extends State<AddLeague> {
     final player = userProvider.player;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0x33FFFFFF),
+        backgroundColor: GREY,
       ),
       body: Column(
         children: [
           Container(
             decoration: const BoxDecoration(
-                color: Color(0x33FFFFFF),
+                color: GREY,
                 borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(32),
                     bottomRight: Radius.circular(32))),
@@ -47,12 +48,13 @@ class _AddLeagueState extends State<AddLeague> {
                 children: [
                   const Text(
                     "Bir Lig Ekle",
-                    style: TextStyle(fontSize: 32),
+                    style: TextStyle(fontSize: 32, color: WHITE),
                   ),
                   addVerticalSpace(32),
                   TextField(
-                    decoration: const InputDecoration(
-                        fillColor: Color(0x33FFFFFF), hintText: "Lig ismi ..."),
+                    style: const TextStyle(color: COLOR_PRIMARY),
+                    decoration: const InputDecoration(hintText: "Lig ismi ..."),
+                    cursorColor: COLOR_SECONDARY,
                     onChanged: (value) {
                       setState(() {
                         name = value;
@@ -66,10 +68,16 @@ class _AddLeagueState extends State<AddLeague> {
         ],
       ),
       floatingActionButton: ElevatedButton.icon(
-          onPressed: name != "" ? () async {
-            ApiResponse response = await LeagueRepository(apiService: apiService).createLeague(name, player!.id);
-            ApiMessanger.show(response, context);
-          } : null,
+          onPressed: name != ""
+              ? () async {
+                  ApiResponse response =
+                      await LeagueRepository(apiService: apiService)
+                          .createLeague(
+                              name, player!.id, userProvider.token.toString());
+                  ApiMessanger.show(response, context);
+                  Navigator.pop(context, 'refresh');
+                }
+              : null,
           icon: const Icon(Icons.send),
           label: Text(name)),
     );

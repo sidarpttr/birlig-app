@@ -1,4 +1,7 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 
 import 'package:bir_lig_app/data/models/league.dart';
 import 'package:bir_lig_app/data/models/match.dart';
@@ -6,47 +9,79 @@ import 'package:bir_lig_app/data/models/player.dart';
 import 'package:bir_lig_app/data/models/profile.dart';
 import 'package:bir_lig_app/data/models/response.dart';
 import 'package:bir_lig_app/provider/userProvider.dart';
-import 'package:http/http.dart' as http;
 
-class ApiService {
-  final String baseUrl = "http://10.20.3.216:3000";
+final class ApiService {
+  final String baseUrl = "http://192.168.215.252:3000";
 
-  Future<ApiResponse> getAllLeauges() async {
-    final response = await http.get(Uri.parse('$baseUrl/lig/'));
-    try {
-      if (response.statusCode == 200) {
+  Future<ApiResponse> getAllLeauges(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/lig/'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      try {
         List<dynamic> jsonResponse = jsonDecode(response.body);
         return ApiResponse(
             status: "success",
             data: jsonResponse.map((e) => League.fromMap(e)).toList());
-      } else {
-        throw ApiResponse(
+      } catch (e) {
+        return ApiResponse(
             status: "fail",
             data: null,
             succes: false,
-            error: "Failed to get Resonse");
+            error: jsonDecode(response.body)["message"]);
       }
-    } catch (e) {
+    } else if (response.statusCode == 401) {
       return ApiResponse(
           status: "fail",
           data: null,
           succes: false,
-          error: jsonDecode(response.body)["message"]);
+          authError: true,
+          error: "Authentication failed");
+    } else {
+      return ApiResponse(
+          status: "fail",
+          data: null,
+          succes: false,
+          error: "An unknown error occurred");
     }
   }
 
   // lig/:leagueId
-  Future<ApiResponse> getLeagueById(String leagueId) async {
-    final response = await http.get(Uri.parse('$baseUrl/lig/$leagueId'));
-    try {
-      return ApiResponse(
-          status: "success", data: League.fromJson(response.body));
-    } catch (e) {
+  Future<ApiResponse> getLeagueById(String leagueId, String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/lig/$leagueId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      try {
+        return ApiResponse(
+            status: "success", data: League.fromJson(response.body));
+      } catch (e) {
+        return ApiResponse(
+            status: "fail",
+            data: null,
+            succes: false,
+            error: jsonDecode(response.body)["message"]);
+      }
+    } else if (response.statusCode == 401) {
       return ApiResponse(
           status: "fail",
           data: null,
           succes: false,
-          error: jsonDecode(response.body)["message"]);
+          authError: true,
+          error: "Authentication failed");
+    } else {
+      return ApiResponse(
+          status: "fail",
+          data: null,
+          succes: false,
+          error: "An unknown error occurred");
     }
   }
 
@@ -54,35 +89,72 @@ class ApiService {
   Future<ApiResponse> getAllLeaugeMatches(String leagueId) async {
     final response = await http.get(Uri.parse('$baseUrl/lig/$leagueId/mac'));
 
-    try {
-      List<dynamic> jsonResponse = jsonDecode(response.body);
-      return ApiResponse(
-          status: "success",
-          data: jsonResponse.map((e) => LeagueMatch.fromMap(e)).toList());
-    } catch (e) {
+    if (response.statusCode == 200) {
+      try {
+        List<dynamic> jsonResponse = jsonDecode(response.body);
+        return ApiResponse(
+            status: "success",
+            data: jsonResponse.map((e) => LeagueMatch.fromMap(e)).toList());
+      } catch (e) {
+        return ApiResponse(
+            status: "fail",
+            data: null,
+            succes: false,
+            error: jsonDecode(response.body)["message"]);
+      }
+    } else if (response.statusCode == 401) {
       return ApiResponse(
           status: "fail",
           data: null,
           succes: false,
-          error: jsonDecode(response.body)["message"]);
+          authError: true,
+          error: "Authentication failed");
+    } else {
+      return ApiResponse(
+          status: "fail",
+          data: null,
+          succes: false,
+          error: "An unknown error occurred");
     }
   }
 
   //  lig/:leagueId/player
-  Future<ApiResponse> getAllLeagueProfiles(String leagueId) async {
-    final response = await http.get(Uri.parse('$baseUrl/lig/$leagueId/player'));
+  Future<ApiResponse> getAllLeagueProfiles(
+      String leagueId, String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/lig/$leagueId/player'),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token", // Add the token here
+      },
+    );
 
-    try {
-      List<dynamic> jsonResponse = jsonDecode(response.body);
-      return ApiResponse(
-          status: "success",
-          data: jsonResponse.map((e) => Profile.fromMap(e)).toList());
-    } catch (e) {
+    if (response.statusCode == 200) {
+      try {
+        List<dynamic> jsonResponse = jsonDecode(response.body);
+        return ApiResponse(
+            status: "success",
+            data: jsonResponse.map((e) => Profile.fromMap(e)).toList());
+      } catch (e) {
+        return ApiResponse(
+            status: "fail",
+            data: null,
+            succes: false,
+            error: jsonDecode(response.body)["message"]);
+      }
+    } else if (response.statusCode == 401) {
       return ApiResponse(
           status: "fail",
           data: null,
           succes: false,
-          error: jsonDecode(response.body)["message"]);
+          authError: true,
+          error: "Authentication failed");
+    } else {
+      return ApiResponse(
+          status: "fail",
+          data: null,
+          succes: false,
+          error: "An unknown error occurred");
     }
   }
 
@@ -103,10 +175,16 @@ class ApiService {
     }
   }
 
-  Future<ApiResponse> createLeague(String name, String playerId) async {
-    final response = await http.post(Uri.parse('$baseUrl/lig/'),
-        body: jsonEncode({"name": name, "playerId": playerId}),
-        headers: {"Content-Type": "application/json"});
+  Future<ApiResponse> createLeague(
+      String name, String playerId, String token) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/lig/'),
+      body: jsonEncode({"name": name, "playerId": playerId}),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token", // Add the token here
+      },
+    );
 
     try {
       if (response.statusCode == 200) {
@@ -128,19 +206,26 @@ class ApiService {
   }
 
   Future<ApiResponse> addMatch(
-      Map<String, dynamic> mac, String leagueId) async {
-    final response = await http.post(Uri.parse("$baseUrl/lig/$leagueId/mac"),
-        body: jsonEncode(mac), headers: {"Content-Type": "application/json"});
+      Map<String, dynamic> mac, String leagueId, String token) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/lig/$leagueId/mac"),
+      body: jsonEncode(mac),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token", // Add the token here
+      },
+    );
+    print(response.body);
 
     try {
       if (response.statusCode == 200) {
         return ApiResponse(status: "success", data: null);
       } else {
         return ApiResponse(
-          status: "fail",
-          data: null,
-          succes: false,
-          error: jsonDecode(response.body)["message"]);
+            status: "fail",
+            data: null,
+            succes: false,
+            error: jsonDecode(response.body)["message"]);
       }
     } catch (e) {
       return ApiResponse(
@@ -176,44 +261,78 @@ class ApiService {
   }
 
   Future<ApiResponse> addPlayerToLeague(
-      String leagueId, String playerId) async {
-    final response = await http.post(Uri.parse('$baseUrl/lig/$leagueId/player'),
-        body: jsonEncode({"playerId": playerId}),
-        headers: {"Content-Type": "application/json"});
-    try {
-      if (response.statusCode == 200) {
+      String leagueId, String playerId, String token) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/lig/$leagueId/player'),
+      body: jsonEncode({"playerId": playerId}),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token", // Add the token here
+      },
+    );
+
+    if (response.statusCode == 200) {
+      try {
         return ApiResponse(status: "success", data: null);
-      } else {
+      } catch (e) {
         return ApiResponse(
             status: "fail",
             data: null,
             succes: false,
-            error: jsonDecode(response.body).message);
+            error: jsonDecode(response.body)["message"]);
       }
-    } catch (e) {
+    } else if (response.statusCode == 401) {
       return ApiResponse(
           status: "fail",
           data: null,
           succes: false,
-          error: jsonDecode(response.body)["message"]);
+          authError: true,
+          error: "Authentication failed");
+    } else {
+      return ApiResponse(
+          status: "fail",
+          data: null,
+          succes: false,
+          error: "An unknown error occurred");
     }
   }
 
   Future<ApiResponse> getAllProfileMatches(
-      String leagueId, String playerId) async {
-    final response = await http
-        .get(Uri.parse('$baseUrl/lig/$leagueId/profile/$playerId/mac'));
-    try {
-      List<dynamic> jsonResponse = jsonDecode(response.body);
-      return ApiResponse(
-          status: "success",
-          data: jsonResponse.map((e) => LeagueMatch.fromMap(e)).toList());
-    } catch (e) {
+      String leagueId, String playerId, String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/lig/$leagueId/profile/$playerId/mac'),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token", // Add the token here
+      },
+    );
+
+    if (response.statusCode == 200) {
+      try {
+        List<dynamic> jsonResponse = jsonDecode(response.body);
+        return ApiResponse(
+            status: "success",
+            data: jsonResponse.map((e) => LeagueMatch.fromMap(e)).toList());
+      } catch (e) {
+        return ApiResponse(
+            status: "fail",
+            data: null,
+            succes: false,
+            error: jsonDecode(response.body)["message"]);
+      }
+    } else if (response.statusCode == 401) {
       return ApiResponse(
           status: "fail",
           data: null,
           succes: false,
-          error: jsonDecode(response.body)["message"]);
+          authError: true,
+          error: "Authentication failed");
+    } else {
+      return ApiResponse(
+          status: "fail",
+          data: null,
+          succes: false,
+          error: "An unknown error occurred");
     }
   }
 
@@ -222,10 +341,62 @@ class ApiService {
         headers: <String, String>{'Content-Type': 'application/json'},
         body:
             jsonEncode(<String, String>{"email": email, "password": password}));
+
     try {
       return AuthResponse.fromJson(response.body);
     } catch (e) {
       return AuthResponse(success: false, error: e.toString());
+    }
+  }
+
+  Future<AuthResponse> register(
+      String name, String email, String password) async {
+    await http.post(Uri.parse("$baseUrl/auth/signup"),
+        headers: <String, String>{'Content-Type': 'application/json'},
+        body: jsonEncode(<String, String>{
+          "email": email,
+          "password": password,
+          "name": name
+        }));
+    try {
+      return AuthResponse(success: true);
+    } catch (e) {
+      return AuthResponse(success: false, error: e.toString());
+    }
+  }
+
+  Future<ApiResponse> getAllPlayerMatches(String playerId) async {
+    final response =
+        await http.get(Uri.parse("$baseUrl/player/$playerId/maclar"));
+
+    try {
+      List<dynamic> jsonReponse = jsonDecode(response.body);
+      return ApiResponse(
+          data: jsonReponse.map((e) => LeagueMatch.fromMap(e)).toList(),
+          status: "success");
+    } catch (e) {
+      return ApiResponse(
+          status: "fail",
+          data: null,
+          succes: false,
+          error: jsonDecode(response.body)["message"]);
+    }
+  }
+
+  Future<ApiResponse> getAllLeaguesForPlayer(String playerId) async {
+    final response =
+        await http.get(Uri.parse("$baseUrl/player/$playerId/ligler"));
+    try {
+      List<dynamic> jsonResponse = jsonDecode(response.body);
+      return ApiResponse(
+          status: "success",
+          data: jsonResponse.map((e) => League.fromMap(e)).toList());
+    } catch (e) {
+      return ApiResponse(
+          status: "fail",
+          data: null,
+          succes: false,
+          error: jsonDecode(response.body)["message"]);
     }
   }
 }

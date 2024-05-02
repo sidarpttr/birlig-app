@@ -2,7 +2,6 @@ const Player = require("../models/player.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const CustomError = require("../utils/CustomError");
-const { playerRoute } = require("../routes");
 
 const signUp = async (name, email, password) => {
     const existingUser = await Player.findOne({ email });
@@ -15,20 +14,14 @@ const signUp = async (name, email, password) => {
 };
 
 const logIn = async (email, password) => {
-    const _player = await Player.findOne({ email })
-        .populate({ path: "ligler", model: "League", select: "name" })
-        .populate({
-            path: "maclar",
-            select: "scores",
-            options: { sort: { date: -1 }, limit: 7 },
-        });
+    const _player = await Player.findOne({ email }).select("-ligler -maclar");
     if (!_player) throw new CustomError("Kullanıcı bulunamadı", 404);
 
     const isMatch = await bcrypt.compare(password, _player.password);
     if (!isMatch) throw new CustomError("Hatalı Şifre", 400);
 
     const token = jwt.sign({ id: _player._id }, process.env.SECRET_KEY, {
-        expiresIn: "1d",
+        expiresIn: "2h",
     });
 
     const new_player = Object.assign({}, _player._doc);

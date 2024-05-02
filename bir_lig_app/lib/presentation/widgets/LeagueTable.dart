@@ -1,8 +1,10 @@
 import 'package:bir_lig_app/data/models/response.dart';
 import 'package:bir_lig_app/data/services/api_service.dart';
 import 'package:bir_lig_app/presentation/widgets/matchView.dart';
+import 'package:bir_lig_app/provider/userProvider.dart';
 import 'package:bir_lig_app/utils/helper_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LeagueTable extends StatelessWidget {
   final Future<ApiResponse> futureLeague;
@@ -83,11 +85,13 @@ class PlayerMatches extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final token = userProvider.token.toString();
 
     TextTheme _textTheme = Theme.of(context).textTheme;
     return FutureBuilder(
       future:
-          ApiService().getAllProfileMatches(leagueId, playerId),
+          ApiService().getAllProfileMatches(leagueId, playerId, token),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox(

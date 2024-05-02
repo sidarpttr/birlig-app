@@ -15,7 +15,6 @@ class DatabaseError extends Error{
 }
 
 module.exports = (error, req, res, next) => {
-
     //check the type of the error
     if(error.name === 'MongoError' && error.code === 11000) {
         error = new ValidationError('Dublicate field value entered');

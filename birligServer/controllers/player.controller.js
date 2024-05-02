@@ -1,4 +1,9 @@
-const { getPlayerById, getAllMatches, getAllPlayers } = require("../services/player");
+const {
+    getPlayerById,
+    getAllMatches,
+    getAllPlayers,
+    getAllLeaguesForPlayer
+} = require("../services/player");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 
 exports.getPlayerById = asyncErrorHandler(async (req, res, next) => {
@@ -16,4 +21,10 @@ exports.getAllMatches = asyncErrorHandler(async (req, res, next) => {
     const { playerId } = req.params;
     const matches = await getAllMatches(playerId);
     res.status(200).json(matches);
+});
+
+exports.getAllLeaguesForPlayer = asyncErrorHandler(async (req, res) => {
+    const { playerId } = req.params;
+    const leagues = await getAllLeaguesForPlayer(playerId);
+    res.status(200).json(leagues);
 });

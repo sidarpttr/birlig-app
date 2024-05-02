@@ -6,19 +6,22 @@ const asyncErrorHandler = require("../utils/asyncErrorHandler");
 const authenticate = asyncErrorHandler(async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        throw new CustomError("Authentication failed", 401);
+        res.status(401).json({authFail:true, error: "Authentication Failed"});
+        return;
     }
     const token = authHeader.split(" ")[1];
     let decoded;
     try {
         decoded = jwt.verify(token, process.env.SECRET_KEY);
     } catch (error) {
-        throw new CustomError("Invalid or expired token", 401);
+        res.status(401).json({authFail:true, error: "Invalid or expired token"});
+        return;
     }
 
     const player = await Player.findById(decoded.id);
     if (!player) {
-        throw new CustomError("who are u? Authentication failed", 401);
+        res.status(401).json({authFail:true, error: "who are u? Authentication failed"});
+        return;
     }
 
     req.user = player;

@@ -6,11 +6,21 @@ const playerInLeague = asyncErrorHandler(async (req, res, next) => {
     const { leagueId } = req.params;
     const playerId = req.user.id;
     const player = await Player.findById(playerId);
-    if (leagueId in player.ligler) {
-        next();
+
+    if (player.ligler.includes(leagueId)) {
+        req.isMember = true;
     } else {
-        throw new CustomError("Bu ligte yetkiniz yok", 400);
+        req.isMember = false;
+    }
+    next();
+});
+
+const canChangeLeague = asyncErrorHandler( async (req, res, next) => {
+    if(req.isMember){
+        next();
+    }else{
+        throw new CustomError("bu ligte yetkin yok", 401);
     }
 });
 
-module.exports = { playerInLeague };
+module.exports = { playerInLeague, canChangeLeague };

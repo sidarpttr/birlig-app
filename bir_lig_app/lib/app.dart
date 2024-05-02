@@ -1,4 +1,3 @@
-
 import 'package:bir_lig_app/presentation/screens/homePage.dart';
 import 'package:bir_lig_app/presentation/screens/myLeaguesPage.dart';
 import 'package:bir_lig_app/presentation/screens/playerPage.dart';
@@ -18,7 +17,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("1Lig"),
+        title: SizedBox(height: 100, child: Image.asset('assets/appstore.png')),
       ),
       body: Center(
         child: body[_currentIndex],

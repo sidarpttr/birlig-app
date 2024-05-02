@@ -4,14 +4,16 @@ class ApiResponse {
   final dynamic data;
   final bool succes;
   final String? error;
+  final bool authError;
+
+  set authError(bool value) {
+    this.authError = value;
+  }
 
   ApiResponse(
       {required this.status,
       required this.data,
       this.succes = true,
-      this.error}) {
-    if (!succes) {
-      
-    }
-  }
+      this.error,
+      this.authError = false});
 }

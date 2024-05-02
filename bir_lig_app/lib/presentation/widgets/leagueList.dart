@@ -16,7 +16,7 @@ class LeagueListTile extends StatelessWidget {
     return GestureDetector(
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: ListTile(
             title: Text(title),
           ),

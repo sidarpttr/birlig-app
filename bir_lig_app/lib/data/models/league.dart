@@ -10,13 +10,15 @@ class League {
   final List<Profile>? players;
   final List<LeagueMatch>? maclar;
   final Puan? puanTablosu;
+  final bool? isMember;
 
   League(
       {required this.id,
       this.name,
       this.players,
       this.maclar,
-      this.puanTablosu});
+      this.puanTablosu,
+      this.isMember = true});
 
   factory League.fromMap(Map<String, dynamic> map) {
     List<dynamic>? playerList = map["players"];
@@ -34,7 +36,7 @@ class League {
 
     Map<String, dynamic>? puan = map["puanTablosu"];
     Puan? puanTablosu;
-    if(puan != null){
+    if (puan != null) {
       puanTablosu = Puan.fromMap(puan);
     }
 
@@ -43,8 +45,8 @@ class League {
         name: map["name"] as String,
         players: players,
         maclar: maclar,
-        puanTablosu: puanTablosu
-      );
+        puanTablosu: puanTablosu,
+        isMember: map["isMember"]);
   }
 
   factory League.fromJson(String json) =>

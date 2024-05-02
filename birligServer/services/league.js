@@ -9,34 +9,41 @@ const Player = require("../models/player.model");
 const CustomError = require("../utils/CustomError");
 
 const createLeague = async (name, playerId) => {
-
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
         //puan tablosu oluştur
         const puanTablosu = new Puan();
-    
+
         //ligi oluştur
-        const newLeague = new League({name: name, puanTablosu: puanTablosu});
-        const savedLeague = await newLeague.save({session});
-        
+        const newLeague = new League({ name: name, puanTablosu: puanTablosu });
+        const savedLeague = await newLeague.save({ session });
+
         //lig profilil oluşturur ve lige ekler
-        const profile = new LeagueProfile({player: playerId, league: savedLeague._id});
-        const savedProfile = await profile.save({session});
+        const profile = new LeagueProfile({
+            player: playerId,
+            league: savedLeague._id,
+        });
+        const savedProfile = await profile.save({ session });
         newLeague.players.push(savedProfile._id);
+
+        await Player.findByIdAndUpdate(
+            playerId,
+            { $push: { ligler: savedLeague._id } },
+            { session, new: true }
+        );
 
         //puan tablosunun ligine belirle
         puanTablosu.league = savedLeague._id;
         puanTablosu.siralama.push(savedProfile._id);
-        await puanTablosu.save({session: session});
+        await puanTablosu.save({ session: session });
 
         await session.commitTransaction();
         return savedLeague;
-
     } catch (error) {
         await session.abortTransaction();
         throw error;
-    }finally{
+    } finally {
         session.endSession();
     }
 
@@ -83,10 +90,9 @@ const addPlayerToLeague = async (leagueid, playerid) => {
         player.ligler.push(league);
 
         await player.save({ session });
-        const saved = await league.save({ session });
+        await league.save({ session });
 
         await session.commitTransaction();
-        return saved;
     } catch (error) {
         await session.abortTransaction();
         throw error;
@@ -122,7 +128,6 @@ const getLeagueById = async (id) => {
 };
 
 const getProfileById = async (profileId) => {
-    console.log(profileId);
     const profile = await LeagueProfile.findById(profileId)
         .populate({
             path: "player",
@@ -180,6 +185,9 @@ const addMatch = async (
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
+
+/////////////////////////////////////////////// MAÇ VERİSİ OLUŞTURMA ////////////////////////////////////////7
+
         //yeni maç belgesi oluşturuluyor
         const match = new Match({
             players: [player1id, player2id],
@@ -187,16 +195,23 @@ const addMatch = async (
             league: leagueId,
         });
 
+        //maç bilgisi kaydediliyor
+        await match.save({ session });
+
+/////////////////////////////////////////////// oyuncuları güncelleme //////////////////////////////////777
+
         //oyuncların maç listesine yeni maçlar ekleniyor
         const bulkOps = [
             {
                 updateOne: {
+                    //oyuncunun ligte olduğundan emin olmak için liglerinde lig id si aranıyor
                     filter: { _id: player1id, ligler: { $in: [leagueId] } },
                     update: { $push: { maclar: match } },
                 },
             },
             {
                 updateOne: {
+                    //oyuncunun ligte olduğundan emin olmak için liglerinde lig id si aranıyor
                     filter: { _id: player2id, ligler: { $in: [leagueId] } },
                     update: { $push: { maclar: match } },
                 },
@@ -206,14 +221,9 @@ const addMatch = async (
         //oyuncu belgeleri güncelleniyor
         await Player.bulkWrite(bulkOps, { session });
 
-        //ligin maçlarına yeni maçlar ekleniyor
-        await League.updateOne(
-            { _id: leagueId },
-            { $push: { maclar: match } },
-            { session }
-        );
+////////////////////////////////////////////// lig profilleri güncelleme ////////////////////////////7
 
-        //oyuncluarın lig profilleri güncelleniyor
+        //lig profilleri güncelleme optionu
         const updateFields1 = {
             $inc: { om: 1, ag: player1score, yg: player2score },
         };
@@ -221,7 +231,7 @@ const addMatch = async (
             $inc: { om: 1, ag: player2score, yg: player1score },
         };
 
-        //maçın sonucuna göre puanlar güncelleniyor
+        //maç sonucuna göre puanlar dağıtılıyor
         if (player1score > player2score) {
             updateFields1.$inc.puan = 3;
         } else if (player1score < player2score) {
@@ -231,53 +241,53 @@ const addMatch = async (
             updateFields2.$inc.puan = 1;
         }
 
-        //oyuncuların lig profilleri güneclleniyor
+        //oyuncuların lig profilleri günecelleniyor
         const leagueProfile1 = await LeagueProfile.findOneAndUpdate(
             { player: player1id, league: leagueId },
             updateFields1,
             { new: true, session }
-        );
+        ).session(session);
 
         const leagueProfile2 = await LeagueProfile.findOneAndUpdate(
             { player: player2id, league: leagueId },
             updateFields2,
             { new: true, session }
-        );
+        ).session(session);
 
+        //averajlar güncelleniyor
         leagueProfile1.averaj = leagueProfile1.ag - leagueProfile1.yg;
         leagueProfile2.averaj = leagueProfile2.ag - leagueProfile2.yg;
 
+        //profiller database e kaydediliyor
         await leagueProfile1.save({ session });
         await leagueProfile2.save({ session });
 
-        //oyuncu bulunmazsa hata atılıyor
-        if (!leagueProfile1 || !leagueProfile2)
-            throw new CustomError("Oyuncular ligte bulunamadı", 404);
 
-        //maç bilgisi kaydediliyor
-        await match.save({ session });
+////////////////////////////////////////////////////  PUAN TABLOSU VE LİG GÜNCELLEME //////////////////////////7
 
-        ///////////////////////////  PUAN TABLOSU GÜNCELLEME //////////////////////////7
+        //ligi fetch ediyor
+        const league = await League.findById(leagueId);
+        
 
-        //lig profilleri fetch ediliyor
-        let leagueProfiles = await LeagueProfile.find({ league: leagueId });
+    //////////////////////////////////////////////// PUAN TABLOSU TABLOSU İÇİN ////////////////////////////////////////
 
-        //lig profillerindeki puan ve averaj değerlerine göre sıralanıyor
-        leagueProfiles = leagueProfiles.sort((a, b) => {
-            if (b.puan === a.puan) {
-                return b.averaj - a.averaj;
-            }
-            return b.puan - a.puan;
-        });
 
-        //puan tablosu bulunuyor ve güncelleniyor
-        const puan = await Puan.findOne({ league: leagueId });
-        if (!puan) {
-            throw new CustomError("Puan tablosu bulunamadı.", 404);
-        }
+            /// VAZ GEÇTİM BAŞKA Bİ ŞEY GELDİ AKLIMA ///
 
-        puan.siralama = leagueProfiles.map((profile) => profile._id);
-        await puan.save();
+
+    ////////////////////////////////////////////// LİG İÇİN ///////////////////////////////////7777
+
+
+        league.maclar.push(match._id);
+        
+
+    ///////////////////////////////////////////// SAVE /////////////////////////////////////////////
+
+        //await puan.save({ session });
+        await league.save({ session });
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
 
         //işlem tamamlandı ve otrum sonlnadırıldı
         await session.commitTransaction();

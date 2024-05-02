@@ -27,8 +27,8 @@ exports.addPlayerToLeague = asyncErrorHandler(async (req, res, next) => {
     const { playerId } = req.body;
     if (!playerId) throw new CustomError("Oyuncu eksik", 400);
 
-    const updatedLeague = await addPlayerToLeague(leagueId, playerId);
-    res.status(200).json(updatedLeague);
+    await addPlayerToLeague(leagueId, playerId);
+    res.status(200).json({status:"success"});
 });
 
 exports.getAllLeagues = asyncErrorHandler(async (req, res, next) => {
@@ -39,7 +39,9 @@ exports.getAllLeagues = asyncErrorHandler(async (req, res, next) => {
 exports.getLeagueById = asyncErrorHandler(async (req, res, next) => {
     const { leagueId } = req.params;
     const league = await getLeagueById(leagueId);
-    res.status(200).json(league);
+    const leagueObject = league.toObject(); // Convert the Mongoose document to a JavaScript object
+    leagueObject.isMember = req.isMember;
+    res.status(200).json(leagueObject);
 });
 
 exports.removeFromLeague = asyncErrorHandler(async (req, res, next) => {

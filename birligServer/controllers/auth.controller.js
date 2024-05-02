@@ -9,7 +9,6 @@ exports.signUp = asyncErrorHandler(async (req, res) => {
     const player = await signUp(name, email, password);
     res.status(201).json({
         status: "success",
-        data: player,
     });
 });
 

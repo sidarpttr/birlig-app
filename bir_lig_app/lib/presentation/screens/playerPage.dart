@@ -1,9 +1,7 @@
 import 'package:bir_lig_app/constants/theme_constants.dart';
-import 'package:bir_lig_app/presentation/widgets/lastMatch.dart';
 import 'package:bir_lig_app/provider/userProvider.dart';
 import 'package:bir_lig_app/utils/helper_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 class PlayerPage extends StatelessWidget {
@@ -18,10 +16,10 @@ class PlayerPage extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(player!.name!),
+            Text(player?.name ?? 'Default Name'),
             addVerticalSpace(10),
             Text(
-              player.email!,
+              player?.email ?? 'Default Email',
               style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),
           ],
@@ -32,7 +30,7 @@ class PlayerPage extends StatelessWidget {
           child: CircleAvatar(
             backgroundColor: COLOR_SECONDARY,
             child: Text(
-              player.name![0],
+              player?.name?[0] ?? ' ',
               style: const TextStyle(color: SCAFFOLD_BACKGROUND),
             ),
           ),
@@ -62,29 +60,7 @@ class PlayerPage extends StatelessWidget {
               ))
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              addVerticalSpace(30),
-              const Text(
-                "Son Maçların",
-                style: TextStyle(color: Colors.grey),
-              ),
-              addVerticalSpace(10),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children:
-                      player.maclar!.map((e) => LastMatch(match: e)).toList(),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      body: Center(child: Text("bakcak bi şey yok")),
     );
   }
 }

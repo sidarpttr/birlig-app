@@ -17,6 +17,15 @@ class Player {
     this.maclar,
     this.email,
   });
+  
+  String toJson() {
+    Map<String, dynamic> playerMap = {
+      "_id": id,
+      "name": name,
+      "email": email,
+    };
+    return jsonEncode(playerMap);
+  }
 
   factory Player.fromMap(Map<String, dynamic> map) {
     List<dynamic>? ligList = map["ligler"];

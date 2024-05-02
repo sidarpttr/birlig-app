@@ -20,7 +20,9 @@ const getAllLeagueProfilesForPlayer = async (id) => {
 };
 
 const getAllMatches = async (id) => {
-    const matches = await Match.find({ players: { $in: id } });
+    const matches = await Match.find({ players: { $in: id } }).select(
+        "-league -players"
+    );
     return matches;
 };
 
@@ -29,8 +31,17 @@ const getAllPlayers = async () => {
     return players;
 };
 
+const getAllLeaguesForPlayer = async (playerId) => {
+    const player = await Player.findById(playerId)
+        .populate({ path: "ligler", model: "League", select: "name" })
+        .select("ligler");
+    if (!player) throw new CustomError("kullanıcı bulunamadı", 400);
+    return player["ligler"];
+};
+
 module.exports = {
     getPlayerById,
     getAllMatches,
     getAllPlayers,
+    getAllLeaguesForPlayer,
 };
